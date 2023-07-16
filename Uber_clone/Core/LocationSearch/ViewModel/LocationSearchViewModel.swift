@@ -16,9 +16,11 @@ class LocationSearchViewModel: NSObject, ObservableObject{
     
     //
     @Published var selectedLocation: CLLocationCoordinate2D?
+    @Published var selectedLocationtext: String?
     
     //A utility object for generating a list of completion strings based on a partial search string that you provide.
     private var searchCompleter = MKLocalSearchCompleter()
+    
     
     var queryFragment: String = ""{
         didSet{
@@ -37,6 +39,7 @@ class LocationSearchViewModel: NSObject, ObservableObject{
     
     // get coordinate for selected search
     func selectLocation(_ location: MKLocalSearchCompletion){
+        selectedLocationtext = location.title
         locationSearch(forLocalSearchCompletion: location) { response, error in
             if let error = error{
                 print(error.localizedDescription)

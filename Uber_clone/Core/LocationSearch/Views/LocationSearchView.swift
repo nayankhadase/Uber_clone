@@ -11,7 +11,7 @@ import MapKit
 struct LocationSearchView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var viewModel: LocationSearchViewModel
-    
+    @Binding var mapState: MapViewState
     
     var body: some View {
         VStack(spacing:0){
@@ -47,8 +47,15 @@ struct LocationSearchView: View {
                         LocationDetailsView(searchResult: result)
                             .padding(.horizontal)
                             .onTapGesture {
-                                viewModel.selectLocation(result)
                                 dismiss()
+                                viewModel.selectLocation(result)
+                                withAnimation(.easeIn(duration: 3)) {
+                                    DispatchQueue.main.async {
+                                        mapState = .locationSelected
+                                    }
+                                   
+                                }
+                                
                             }
                     }
                 }
@@ -99,7 +106,7 @@ struct HeaderView: View {
 
 struct LocationSearchView_Previews: PreviewProvider{
     static var previews: some View{
-        LocationSearchView()
+        LocationSearchView(mapState: .constant(.noInput))
     }
 }
 
