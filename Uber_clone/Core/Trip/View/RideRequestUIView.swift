@@ -9,16 +9,17 @@ import SwiftUI
 
 struct RideRequestUIView: View {
     @EnvironmentObject var viewModel: LocationSearchViewModel
+    @State private var selectedRideType: RideType = .UberAuto
     
     var body: some View {
         VStack{
-            HStack{
-                Capsule()
-                    .frame(width: 40, height: 4)
-                    .foregroundColor(.secondary.opacity(0.4))
-            }
+//            HStack{
+//                Capsule()
+//                    .frame(width: 40, height: 4)
+//                    .foregroundColor(.secondary.opacity(0.4))
+//            }
             ScrollView(.vertical, showsIndicators: false){
-                LocationView(viewModel: viewModel)
+                LocationView(viewModel: viewModel, selectedRideType: $selectedRideType)
             }
             .padding(.top)
         }
@@ -39,6 +40,7 @@ struct RideRequestUIView_Previews: PreviewProvider{
 
 struct LocationView: View {
     @ObservedObject var viewModel: LocationSearchViewModel
+    @Binding var selectedRideType: RideType
     
     var body: some View {
         VStack{
@@ -66,7 +68,7 @@ struct LocationView: View {
         //                    .background(.secondary.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 5))
                         
-                        Text(.now, style: .time)
+                        Text(viewModel.pickupTime, style: .time)
                             .foregroundStyle(.secondary)
                     }
                     
@@ -78,8 +80,8 @@ struct LocationView: View {
                             .frame(maxWidth: .infinity, alignment:.leading)
         //                    .background(.secondary.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 5))
-                        
-                        Text(.now.addingTimeInterval(3000), style: .time)
+                            .fontWeight(.bold)
+                        Text(viewModel.dropOffTime, style: .time)
                             .foregroundStyle(.secondary)
                     }
                     
@@ -90,6 +92,9 @@ struct LocationView: View {
             }
             .padding(.horizontal)
             
+            Divider()
+                .padding(.horizontal)
+            
             Text("SUGGESTED RIDE")
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
@@ -97,20 +102,28 @@ struct LocationView: View {
             
             ScrollView(.horizontal, showsIndicators: false){
                 HStack{
-                    ForEach(1...3, id: \.self){ index in
+                    ForEach(RideType.allCases, id: \.id){ ride in
                         VStack{
-                            Image("car\(index)")
+                            Image(ride.imageName)
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 100)
                             
-                            Text("name")
-                            Text(20.0, format: .currency(code: "INR"))
+                            Text(ride.description)
+                            Text(viewModel.calculateRidePrice(forType: ride), format: .currency(code: "INR"))
                         }
                         .padding()
                         .frame(height: 150)
-                        .background(.secondary.opacity(0.3))
+                        .background(selectedRideType == ride ? .blue : .secondary.opacity(0.3))
+                        .foregroundStyle(selectedRideType == ride ? .white : .black)
+                        .scaleEffect( selectedRideType == ride ? 1.1 : 1)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .onTapGesture {
+                            withAnimation (.spring()){
+                                selectedRideType = ride
+                            }
+                            
+                        }
                     }
                 }
             }

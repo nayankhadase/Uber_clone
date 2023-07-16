@@ -10,9 +10,11 @@ import MapKit
 
 
 struct MapViewRepresentable: UIViewRepresentable{
+    // this is not publishing anything just observing
+    // so we publish userlocation from location manager
     
     let mapView = MKMapView()
-    let locationManager = LocationManager()
+    let locationManager = LocationManager.shared
     @Binding var mapState: MapViewState
     
     @EnvironmentObject var viewModel: LocationSearchViewModel
@@ -42,11 +44,13 @@ struct MapViewRepresentable: UIViewRepresentable{
             case .locationSelected:
                 print("location selected")
                 // add annotation
-                context.coordinator.addAndSelectAbbotation(withCoordinate: selectedLocation)
+                context.coordinator.addAndSelectAnnotation(withCoordinate: selectedLocation)
                 context.coordinator.configurePloyline(withdestination: selectedLocation)
                 break
             case .searchingForLocation:
                 print("searching for location")
+                break
+            case .polylineAdded:
                 break
             }
         }
@@ -75,7 +79,7 @@ struct MapViewRepresentable: UIViewRepresentable{
             // create region center around specific coordinate
             let region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: coordinate.latitude, longitude: coordinate.longitude), span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05))
             currentRegion = region
-            if self.parent.mapState != .locationSelected{
+            if self.parent.mapState != .polylineAdded{
                 self.parent.mapView.setRegion(region, animated: true) // update region for map view
             }
         }
@@ -90,7 +94,7 @@ struct MapViewRepresentable: UIViewRepresentable{
         
         //MARK: - helper
         
-        func addAndSelectAbbotation(withCoordinate coordinate: CLLocationCoordinate2D){
+        func addAndSelectAnnotation(withCoordinate coordinate: CLLocationCoordinate2D){
             // remove previous anotation:
             self.parent.mapView.removeAnnotations(self.parent.mapView.annotations)
             
@@ -106,35 +110,18 @@ struct MapViewRepresentable: UIViewRepresentable{
             parent.mapView.showAnnotations(parent.mapView.annotations, animated: true)
         }
         
-        func getDestinationRoute(from userLocation: CLLocationCoordinate2D, to destination: CLLocationCoordinate2D, completion: @escaping (MKRoute) -> Void){
-            // remove all overlays / polyline
-            self.parent.mapView.removeOverlays(self.parent.mapView.overlays)
-            
-            let userplacemark = MKPlacemark(coordinate: userLocation)
-            let destiPlacemark = MKPlacemark(coordinate: destination)
-            let request = MKDirections.Request()
-            request.source = MKMapItem(placemark: userplacemark)
-            request.destination = MKMapItem(placemark: destiPlacemark)
-            
-            let direction = MKDirections(request: request)
-            direction.calculate { response, error in
-                if let error = error{
-                    print(error.localizedDescription)
-                    return
-                }
-                
-                guard let route = response?.routes.first else{return}
-                
-                completion(route)
-            }
-        }
+        
         
         func configurePloyline(withdestination destination: CLLocationCoordinate2D){
             guard let userLocation = userLocation else{return}
-            self.getDestinationRoute(from: userLocation, to: destination) { route in
+            
+            // remove all overlays / polyline
+            self.parent.mapView.removeOverlays(self.parent.mapView.overlays)
+            
+            self.parent.viewModel.getDestinationRoute(from: userLocation, to: destination) { route in
                 // add polyline as Overlay
                 self.parent.mapView.addOverlay(route.polyline)
-                
+                self.parent.mapState = .polylineAdded
                 let rect = self.parent.mapView.mapRectThatFits(route.polyline.boundingMapRect, edgePadding: UIEdgeInsets(top: 50, left: 40, bottom: 500, right: 40))
                 self.parent.mapView.setVisibleMapRect(rect, animated: true)
             }

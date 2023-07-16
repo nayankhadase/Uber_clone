@@ -18,6 +18,10 @@ class LocationSearchViewModel: NSObject, ObservableObject{
     @Published var selectedLocation: CLLocationCoordinate2D?
     @Published var selectedLocationtext: String?
     
+    //
+    @Published var pickupTime = Date()
+    @Published var dropOffTime = Date()
+    
     //A utility object for generating a list of completion strings based on a partial search string that you provide.
     private var searchCompleter = MKLocalSearchCompleter()
     
@@ -29,7 +33,8 @@ class LocationSearchViewModel: NSObject, ObservableObject{
         }
     }
     
-    var currentLocation: String = ""
+    var source: String = ""
+    var userLocation: CLLocationCoordinate2D?
     
     override init() {
         super.init()
@@ -60,6 +65,44 @@ class LocationSearchViewModel: NSObject, ObservableObject{
         search.start(completionHandler: complition)
     }
     
+    
+    func calculateRidePrice(forType type: RideType) -> Double{
+        guard let destination = selectedLocation else {return 0.0}
+        guard let source = userLocation else {return 0.0}
+        
+        let sourceLocation = CLLocation(latitude: source.latitude, longitude: source.longitude)
+        let destinationLocation = CLLocation(latitude: destination.latitude, longitude: destination.longitude)
+        
+        let distance = sourceLocation.distance(from: destinationLocation)
+        return type.getPrice(for: distance)
+    }
+    
+    func getDestinationRoute(from userLocation: CLLocationCoordinate2D, to destination: CLLocationCoordinate2D, completion: @escaping (MKRoute) -> Void){
+        
+        let userplacemark = MKPlacemark(coordinate: userLocation)
+        let destiPlacemark = MKPlacemark(coordinate: destination)
+        let request = MKDirections.Request()
+        request.source = MKMapItem(placemark: userplacemark)
+        request.destination = MKMapItem(placemark: destiPlacemark)
+        
+        let direction = MKDirections(request: request)
+        direction.calculate { response, error in
+            if let error = error{
+                print(error.localizedDescription)
+                return
+            }
+            
+            guard let route = response?.routes.first else{return}
+            self.configureExpectedPickupAndDropoffTime(with: route.expectedTravelTime)
+            completion(route)
+        }
+    }
+    
+    func configureExpectedPickupAndDropoffTime(with expectedTravelTime: Double){
+        pickupTime = Date.now
+        dropOffTime = Date.now.addingTimeInterval(expectedTravelTime)
+        
+    }
     
 }
 

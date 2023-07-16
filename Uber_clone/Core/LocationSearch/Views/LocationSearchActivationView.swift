@@ -9,7 +9,7 @@ import SwiftUI
 
 struct LocationSearchActivationView: View {
     var body: some View {
-        HStack{
+        HStack(spacing:0){
             Circle()
                 .fill()
                 .frame(width: 10)
@@ -24,7 +24,6 @@ struct LocationSearchActivationView: View {
         .background()
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .shadow(color:.gray, radius: 3)
-        .padding()
     }
 }
 

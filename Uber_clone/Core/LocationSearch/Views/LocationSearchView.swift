@@ -27,13 +27,13 @@ struct LocationSearchView: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 10)
-            .background(.green)
+            .background(.blue)
             
             Divider()
                 .padding(.bottom)
             
             // header view
-            HeaderView(currentLocation: $viewModel.currentLocation, destinationLocation: $viewModel.queryFragment)
+            HeaderView(currentLocation: $viewModel.source, destinationLocation: $viewModel.queryFragment)
                 .padding([.horizontal, .bottom])
             
             Divider()
@@ -90,14 +90,15 @@ struct HeaderView: View {
                 TextField("Current location", text: $currentLocation)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(.secondary.opacity(0.1))
+                    .background(.secondary.opacity(0.08))
                     .clipShape(RoundedRectangle(cornerRadius: 5))
+                    .disabled(true)
                     
                 
-                TextField("Destination location", text: $destinationLocation)
+                TextField("Destination", text: $destinationLocation)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(.secondary.opacity(0.1))
+                    .background(.secondary.opacity(0.15))
                     .clipShape(RoundedRectangle(cornerRadius: 5))
             }
         }
@@ -107,6 +108,7 @@ struct HeaderView: View {
 struct LocationSearchView_Previews: PreviewProvider{
     static var previews: some View{
         LocationSearchView(mapState: .constant(.noInput))
+            .environmentObject(LocationSearchViewModel())
     }
 }
 

@@ -11,6 +11,9 @@ import CoreLocation
 class LocationManager: NSObject, ObservableObject{
     
     private let locationManager = CLLocationManager()
+    static let shared = LocationManager()
+    
+    @Published var userLocation: CLLocationCoordinate2D?
     
     override init() {
         super.init()
@@ -26,8 +29,8 @@ extension LocationManager: CLLocationManagerDelegate{
     
     // we will ask permision, get user location and stop stopUpdatingLocation because rest we will handle in mapview(coordinator)
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard !locations.isEmpty else {return}
-        
+        guard let location = locations.first else {return}
+        userLocation = location.coordinate
         locationManager.stopUpdatingLocation() // stop updating location
     }
 }

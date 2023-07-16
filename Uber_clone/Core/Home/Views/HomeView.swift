@@ -12,6 +12,8 @@ struct HomeView: View {
     @State private var showLocationSearch = false
     @State private var mapViewState: MapViewState = .noInput
     
+    @EnvironmentObject var locationViewModel: LocationSearchViewModel
+    
     var body: some View {
         ZStack(alignment: .bottom){
             ZStack(alignment: .top){
@@ -21,10 +23,11 @@ struct HomeView: View {
                 VStack{
                     HStack(spacing: 0){
                         MapViewActionButton(mapState: $mapViewState)
-                            .padding(.leading)
+                            .padding(.leading, 8)
                         Spacer()
                         if mapViewState == .noInput{
                             LocationSearchActivationView()
+                                .padding(.trailing)
                                 .onTapGesture {
                                     showLocationSearch.toggle()
                                 }
@@ -34,7 +37,7 @@ struct HomeView: View {
                 }
                 .edgesIgnoringSafeArea(.bottom)
             }
-            if mapViewState == .locationSelected{
+            if mapViewState == .locationSelected || mapViewState == .polylineAdded{
                 RideRequestUIView()
                     .transition(.move(edge: .bottom))
                 
@@ -47,6 +50,9 @@ struct HomeView: View {
         .edgesIgnoringSafeArea(.bottom)
         .sheet(isPresented: $showLocationSearch, content: {
             LocationSearchView(mapState: $mapViewState)
+        })
+        .onReceive(LocationManager.shared.$userLocation, perform: { location in
+            locationViewModel.userLocation = location
         })
         
         
